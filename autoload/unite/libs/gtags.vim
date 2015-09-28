@@ -1,6 +1,6 @@
 
-let s:save_cpo = &cpo
-set cpo&vim
+"let s:save_cpo = &cpo
+"set cpo&vim
 
 " global cmd result option formats {{{
 let s:format = {
@@ -53,6 +53,7 @@ let s:default_project_config_value = {
       \ 'treelize': 0,
       \ 'absolute_path': 0,
       \ 'gtags_libpath': [],
+      \ 'gtags_gempath': 1,
       \ }
 
 function! unite#libs#gtags#get_global_config(key)
@@ -85,12 +86,19 @@ function! unite#libs#gtags#exec_global(short_option, long_option, pattern)
         \ g:unite_source_gtags_shell_quote . a:pattern . g:unite_source_gtags_shell_quote)
 
   let l:gtags_libpath = unite#libs#gtags#get_project_config("gtags_libpath")
-  if !empty(l:gtags_libpath)
-    if type(l:gtags_libpath) == type([])
-      " TODO: judge platform (*nix or windows)
-      let l:cmd = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . join(l:gtags_libpath, ':') . ' ' . l:cmd
-    else
-      call unite#print_error('[unite-gtags] gtags_libpath must be list')
+  if unite#libs#gtags#get_project_config("gtags_gempath")
+    echo getcwd()
+    let l:gempaths_cmd = "bundle show --paths"
+    let l:output = system(l:gempaths_cmd)
+    " echo l:output
+  else
+    if !empty(l:gtags_libpath)
+      if type(l:gtags_libpath) == type([])
+        " TODO: judge platform (*nix or windows)
+        let l:cmd = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . join(l:gtags_libpath, ':') . ' ' . l:cmd
+      else
+        call unite#print_error('[unite-gtags] gtags_libpath must be list')
+      endif
     endif
   endif
 
@@ -188,5 +196,5 @@ function! unite#libs#gtags#on_init_common(args, context)
   let a:context.is_treelized = 0
 endfunction
 
-let &cpo = s:save_cpo
-unlet s:save_cpo
+" let &cpo = s:save_cpo
+" unlet s:save_cpo
