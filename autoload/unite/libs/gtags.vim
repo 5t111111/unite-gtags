@@ -85,19 +85,29 @@ function! unite#libs#gtags#exec_global(short_option, long_option, pattern)
         \ l:short_option,
         \ g:unite_source_gtags_shell_quote . a:pattern . g:unite_source_gtags_shell_quote)
 
-  let l:gtags_libpath = unite#libs#gtags#get_project_config("gtags_libpath")
   if unite#libs#gtags#get_project_config("gtags_gempath")
-    let l:gempaths_cmd = "bundle show --paths"
-    let l:gempaths = split(system(l:gempaths_cmd))
-    let l:cmd = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . join(l:gempaths, ':') . ' ' . l:cmd
-  else
-    if !empty(l:gtags_libpath)
-      if type(l:gtags_libpath) == type([])
-        " TODO: judge platform (*nix or windows)
-        let l:cmd = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . join(l:gtags_libpath, ':') . ' ' . l:cmd
+    let l:bundler_cmd = "bundle show --paths"
+    " TODO: for this purpose, use systemlist instead in future
+    let l:bundler_result = system(l:bundler_cmd)
+    if v:shell_error != 0
+      if v:shell_error == 10
+        call unite#print_error('[unite-gtags] could not locate Gemfile or .bundle/ directory')
       else
-        call unite#print_error('[unite-gtags] gtags_libpath must be list')
+        call unite#print_error('[unite-gtags] an error occurred while executing bundle command')
       endif
+    else
+      let l:gempaths = split(l:bundler_result)
+      let l:cmd = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . join(l:gempaths, ':') . ' ' . l:cmd
+    endif
+  endif
+
+  let l:gtags_libpath = unite#libs#gtags#get_project_config("gtags_libpath")
+  if !empty(l:gtags_libpath)
+    if type(l:gtags_libpath) == type([])
+      " TODO: judge platform (*nix or windows)
+      let l:cmd = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . join(l:gtags_libpath, ':') . ' ' . l:cmd
+    else
+      call unite#print_error('[unite-gtags] gtags_libpath must be list')
     endif
   endif
 
