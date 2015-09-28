@@ -87,10 +87,9 @@ function! unite#libs#gtags#exec_global(short_option, long_option, pattern)
 
   let l:gtags_libpath = unite#libs#gtags#get_project_config("gtags_libpath")
   if unite#libs#gtags#get_project_config("gtags_gempath")
-    echo getcwd()
     let l:gempaths_cmd = "bundle show --paths"
-    let l:output = system(l:gempaths_cmd)
-    " echo l:output
+    let l:gempaths = split(system(l:gempaths_cmd))
+    let l:cmd = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . join(l:gempaths, ':') . ' ' . l:cmd
   else
     if !empty(l:gtags_libpath)
       if type(l:gtags_libpath) == type([])
