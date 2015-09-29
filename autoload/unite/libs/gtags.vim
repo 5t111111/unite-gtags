@@ -84,6 +84,7 @@ function! unite#libs#gtags#exec_global(short_option, long_option, pattern)
         \ l:long_option,
         \ l:short_option,
         \ g:unite_source_gtags_shell_quote . a:pattern . g:unite_source_gtags_shell_quote)
+  let l:gempath = ""
 
   if unite#libs#gtags#get_project_config("gtags_gempath")
     let l:bundler_cmd = "bundle show --paths"
@@ -96,8 +97,8 @@ function! unite#libs#gtags#exec_global(short_option, long_option, pattern)
         call unite#print_error('[unite-gtags] an error occurred while executing bundle command')
       endif
     else
-      let l:gempaths = split(l:bundler_result)
-      let l:cmd = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . join(l:gempaths, ':') . ' ' . l:cmd
+      let l:gempath = join(split(l:bundler_result), ':')
+      let l:cmd_with_gempath = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . l:gempath . ' ' . l:cmd
     endif
   endif
 
@@ -105,7 +106,11 @@ function! unite#libs#gtags#exec_global(short_option, long_option, pattern)
   if !empty(l:gtags_libpath)
     if type(l:gtags_libpath) == type([])
       " TODO: judge platform (*nix or windows)
-      let l:cmd = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . join(l:gtags_libpath, ':') . ' ' . l:cmd
+      if !empty(l:gempath)
+        let l:cmd = "GTAGSLIBPATH=" . (empty(l:gempath) ? '' : l:gempath . ':') . $GTAGSLIBPATH . ':' . join(l:gtags_libpath, ':') . ' ' . l:cmd
+      else
+        let l:cmd = "GTAGSLIBPATH=" . $GTAGSLIBPATH . ':' . join(l:gtags_libpath, ':') . ' ' . l:cmd
+      endif
     else
       call unite#print_error('[unite-gtags] gtags_libpath must be list')
     endif
